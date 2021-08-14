@@ -1,0 +1,55 @@
+type Project {
+  # _id: ID!
+  name: String!
+  has_task: [Task] @relationship(type: "HAS_TASK", direction: OUT)
+  personsManage: [Person] @relationship(type: "MANAGES", direction: IN)
+}
+
+type Task {
+  # _id: ID!
+  name: String!
+  projects: [Project] @relationship(type: "HAS_TASK", direction: IN)
+  persons: [Person]
+    @relationship(type: "ASSIGNED_TO", properties: "AssignedTo", direction: IN)
+}
+
+type Person {
+  # _id: ID!
+  name: String!
+  reports_to: [Person] @relationship(type: "REPORTS_TO", direction: OUT)
+  assignedTask: [Task]
+    @relationship(type: "ASSIGNED_TO", properties: "AssignedTo", direction: OUT)
+  # ASSIGNED_TO_rel: [ASSIGNED_TO]
+  manages: [Project] @relationship(type: "MANAGES", direction: OUT)
+}
+
+interface AssignedTo {
+  effort: Int!
+}
+
+# type ASSIGNED_TO @relationship(name: "ASSIGNED_TO") {
+#   from: Person!
+#   to: Task!
+#   effort: Int!
+# }
+
+type Query {
+  personCount: Int
+    @cypher(
+      statement: """
+      MATCH (p:Person) RETURN count(p) as persons
+      """
+    )
+  projectCount: Int
+    @cypher(
+      statement: """
+      MATCH (t:Project) RETURN count(t) as projects
+      """
+    )
+  taskCount: Int
+    @cypher(
+      statement: """
+      MATCH (t:Task) RETURN count(t) as tasks
+      """
+    )
+}

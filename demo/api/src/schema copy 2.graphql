@@ -1,0 +1,43 @@
+type Project {
+   id: ID!
+   name: String!
+   # has_task: [Task] @relationship(type: "HAS_TASK", direction: OUT)
+   # persons: [Person] @relationship(name: "MANAGES", direction: IN)
+   has_task: [Task] @relationship(type: "HAS_TASK", direction: OUT)
+   persons: [Person] @relationship(type: "MANAGES", direction: IN)
+}
+
+type Task {
+   id: ID!
+   name: String!
+   has_task: [Project] @relationship(type: "HAS_TASK", direction:IN)
+   persons: [Person] @relationship(type: "ASSIGNED_TO", direction:IN)
+   # projects: [Project] @relationship(name: "HAS_TASK", direction: IN)
+   # persons: [Person] @relationship(name: "ASSIGNED_TO", direction: IN)
+}
+
+type Person {
+   id: ID!
+   name: String!
+   assigned_to: [Task] @relationship(type: "ASSIGNED_TO", direction: OUT)
+   manages: [Project] @relationship(type:"MANAGES",direction:OUT)
+   reports_to: [Person] @relationship(type:"REPORTS_TO",direction:OUT)
+   # reports_to: [Person] @relationship(type: "REPORTS_TO", direction: OUT)
+   # assigned_to: [Task] @relationship(type: "ASSIGNED_TO", direction: OUT)
+   # ASSIGNED_TO_rel: [ASSIGNED_TO]
+   # manages: [Project] @relationship(type: "MANAGES", direction: OUT)
+}
+
+# type ASSIGNED_TO @relationship(type:"ASSIGNED_TO"){
+#    from: Person!
+#    to: Task!
+#    effort: Int!
+# }
+
+# type ASSIGNED_TO @relationship(type: "ASSIGNED_TO") {
+#   from: Person!
+#   to: Task!
+#   effort: Int!
+# }
+
+

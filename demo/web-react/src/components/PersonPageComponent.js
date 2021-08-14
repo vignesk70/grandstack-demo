@@ -153,33 +153,19 @@ export default class PersonPageComponent extends Component {
               </FlexboxGrid>
               <Modal show={this.state.show} onHide={this.close}>
                 <Modal.Header>
-                  <Modal.Title>Modal Title</Modal.Title>
+                  <Modal.Title>Add Person</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                   {/* <PersonAdd props={this} /> */}
                   <Form>
                     <FormGroup>
-                      <ControlLabel>Username</ControlLabel>
+                      <ControlLabel>Name</ControlLabel>
                       <FormControl name="name" />
                       <HelpBlock>Required</HelpBlock>
                     </FormGroup>
                     <FormGroup>
-                      <ControlLabel>Email</ControlLabel>
-                      <FormControl name="email" type="email" />
-                      <HelpBlock tooltip>Required</HelpBlock>
-                    </FormGroup>
-                    <BuildDropdown />
-                    <FormGroup>
-                      <ControlLabel>Password</ControlLabel>
-                      <FormControl name="password" type="password" />
-                    </FormGroup>
-                    <FormGroup>
-                      <ControlLabel>Textarea</ControlLabel>
-                      <FormControl
-                        rows={5}
-                        name="textarea"
-                        componentClass="textarea"
-                      />
+                      <ControlLabel>Select Manager</ControlLabel>
+                      <BuildDropdown />
                     </FormGroup>
                     <FormGroup>
                       <ButtonToolbar>

@@ -1,8 +1,8 @@
 {
-    "realm": "staff_realm",
-    "auth-server-url": "http://localhost:8080/auth/",
-    "ssl-required": "none",
-    "resource": "react-client",
-    "public-client": true,
-    "confidential-port": 0
-  }
+  "realm": "staff_realm",
+  "auth-server-url": "http://localhost:8080/auth/",
+  "ssl-required": "external",
+  "resource": "react-client",
+  "public-client": true,
+  "confidential-port": 0
+}

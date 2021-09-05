@@ -1070,3 +1070,297 @@ export default Main
 
 With thoses file create and updated we should be able to now navigate between pages and also get a listing of names of Persons in our database in the Personnel page.
 
+### Keycloak
+
+One of the areas that we should inmplement is to establish securtiy to protect sensitive information. A great tool used for an open source authentication and authorization tool is [Keycloak](https://www.keycloak.org).
+
+Simplest way to establish this is to use Docker to simplify the installation and implementation. Visit [Keycloak Docker](https://www.keycloak.org/getting-started/getting-started-docker) for instructions. I will not be covering the Docker setup/installation but will show you how to basically setup Keycloak to protect a resource. Once you have Keycloak running configure your admin login and bring up the Administration Console.
+
+![Figure 12](https://grandstackdemo.oss-ap-southeast-3.aliyuncs.com/Figure12.png)
+
+In the Administration Console the first thing you need to do is to create a new Realm.
+
+![Figure 13](https://grandstackdemo.oss-ap-southeast-3.aliyuncs.com/Figure13.png)
+
+My reference is https://scalac.io/blog/user-authentication-keycloak-1/
+
+
+Setup a Name for the Realm and save the details. You can use the default for this purpose.
+
+Next would be to create a user. Click on the User menu on the left and enter a Username. Then click save and go the Credentials tab at the top and enter a password. Disabling the Temporary option for our use case. Accept the pop-up and were done creating a user.
+
+IMAGE GOES HERE
+![Figure 14](https://grandstackdemo.oss-ap-southeast-3.aliyuncs.com/Figure14.png)
+
+The next step would be to define a client that will indicate the application that will connect to Keycloak for authentication. We will setup a new client for this.
+Click on the Clients menu on the left.
+
+![Figure 15](https://grandstackdemo.oss-ap-southeast-3.aliyuncs.com/Figure15.png)
+
+Upon creating the client you will be redirected to the details page. For our purpose we will use the default options. For more complex scenarios you will want to fine tune your options.
+
+![Figure 16](https://grandstackdemo.oss-ap-southeast-3.aliyuncs.com/Figure16.png)
+
+The client Installation tab contains the configuration that we will use when we connect through React to secure our application. We will come back to this point after we have setup our React app.
+
+![Figure 17](https://grandstackdemo.oss-ap-southeast-3.aliyuncs.com/Figure17.png)
+
+For the React App to use keycloak we will use the keycloak javascript library to authenticate. We will install the following with `npm install keycloak-js --save`.
+
+With that we can modify a page where we want to authenticate first before we display the information. We will update the `PersonPageComponent.js `that displays individual names to be a protected resource that requires authentication.
+
+Modify the `PersonPageComponent.js ` by performing an import of  `Keycloak` and updating the `PersonPageComponent` component by using the `componentDidMount() ` to load the Keycloak object.
+
+
+```
+import React, { Component } from 'react'
+import {
+  Container,
+  FlexboxGrid,
+  List,
+  Button,
+  Modal,
+  Form,
+  FormGroup,
+  FormControl,
+  HelpBlock,
+  ControlLabel,
+  ButtonToolbar,
+  Dropdown,
+  Table,
+} from 'rsuite'
+import Keycloak from 'keycloak-js'
+import Logout from './LogoutComponent'
+const { Column, HeaderCell, Cell } = Table
+
+import { gql, useQuery } from '@apollo/client'
+
+const GET_PERSON_NAMES = gql`
+  {
+    people {
+      name
+      reports_to {
+        name
+      }
+    }
+  }
+`
+
+
+const GetData = () => {
+  const { loading, error, data } = useQuery(GET_PERSON_NAMES)
+  if (loading) {
+    return 'error'
+  }
+  if (error) return 'error'
+
+  if (data) {
+    console.log('Neo4j data', data)
+
+  }
+
+  return (
+    <>
+      <Table height={400} data={data.people}>
+        <Column width={200}>
+          <HeaderCell>Name</HeaderCell>
+          <Cell dataKey="name" />
+        </Column>
+        <Column width={200}>
+          <HeaderCell>Reports to</HeaderCell>
+          <Cell>
+            {(rowData, rowIndex) => {
+              return (
+                <>
+                  {rowData.reports_to.length > 0 ? (
+                    <span key={rowIndex}>{rowData.reports_to[0].name}</span>
+                  ) : (
+                    <span key={rowIndex}></span>
+                  )}
+                </>
+              )
+            }}
+          </Cell>
+        </Column>
+      </Table>
+    </>
+  )
+}
+
+function BuildDropdown() {
+  const { loading, error, data } = useQuery(GET_PERSON_NAMES)
+  if (loading) {
+    return 'error'
+  }
+  if (error) return 'error'
+
+  if (data) {
+    console.log('this data', data)
+  }
+  return (
+    <>
+      <Dropdown title="Person" style={{ width: '240px' }}>
+        {data.people.map((item, index) => (
+          <Dropdown.Item key={index}>{item.name}</Dropdown.Item>
+        ))}
+      </Dropdown>
+    </>
+  )
+}
+
+export default class PersonPageComponent extends Component {
+  constructor(props) {
+    super(props)
+    this.state = {
+      show: false,
+      personData: [],
+      keycloak: null,
+      authenticated: false,
+    }
+    this.close = this.close.bind(this)
+    this.open = this.open.bind(this)
+  }
+  componentDidMount() {
+    const keycloak = Keycloak('/keycloak.json')
+    keycloak.init({ onLoad: 'login-required' }).then((authenticated) => {
+      this.setState({ keycloak: keycloak, authenticated: authenticated })
+    })
+  }
+  close() {
+    console.log('close')
+    this.setState({ show: false })
+  }
+  open() {
+    console.log('open')
+    this.setState({ show: true })
+  }
+
+  render() {
+    if (this.state.keycloak) {
+      if (this.state.authenticated)
+        return (
+          <div>
+            <Container>
+              <FlexboxGrid>
+                <h1>Persons</h1>
+              </FlexboxGrid>
+
+              <FlexboxGrid justify="center">
+                <FlexboxGrid.Item colspan={20}>
+                  <List>
+                    <GetData props={this} />
+                  </List>
+                </FlexboxGrid.Item>
+              </FlexboxGrid>
+              <FlexboxGrid
+                justify="center"
+                className="button-margin"
+                style={{ marginTop: '20px' }}
+              >
+                <FlexboxGrid.Item>
+                  <Button appearance="default" onClick={this.open}>
+                    {' '}
+                    Add Person{' '}
+                  </Button>
+                  <Logout keycloak={this.state.keycloak} />
+                </FlexboxGrid.Item>
+              </FlexboxGrid>
+              <Modal show={this.state.show} onHide={this.close}>
+                <Modal.Header>
+                  <Modal.Title>Add Person</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                  {/* <PersonAdd props={this} /> */}
+                  <Form>
+                    <FormGroup>
+                      <ControlLabel>Name</ControlLabel>
+                      <FormControl name="name" />
+                      <HelpBlock>Required</HelpBlock>
+                    </FormGroup>
+                    <FormGroup>
+                      <ControlLabel>Select Manager</ControlLabel>
+                      <BuildDropdown />
+                    </FormGroup>
+                    <FormGroup>
+                      <ButtonToolbar>
+                        <Button appearance="primary">Submit</Button>
+                        <Button appearance="default" onClick={this.close}>
+                          Cancel
+                        </Button>
+                      </ButtonToolbar>
+                    </FormGroup>
+                  </Form>
+                </Modal.Body>
+              </Modal>
+            </Container>
+          </div>
+        )
+      else return <div>Unable to authenticate!</div>
+    }
+    return <div>Initializing Keycloak...</div>
+  }
+}
+
+```
+
+We will add another component for handling a logout as well. Create a `LogoutComponent.js` file in our components directory.
+
+```
+import React, { Component } from 'react'
+import { withRouter } from 'react-router-dom'
+
+class Logout extends Component {
+  logout() {
+    this.props.history.push('/')
+    this.props.keycloak.logout()
+  }
+
+  render() {
+    return <button onClick={() => this.logout()}>Logout</button>
+  }
+}
+export default withRouter(Logout)
+
+```
+
+
+To get this all to work we need to create a `keycloak.json` file with the contents of the Installation folder from the client page in Keycloak. Store this file in the `pubclic` folder of our application.
+
+![Figure 18](https://grandstackdemo.oss-ap-southeast-3.aliyuncs.com/Figure18.png)
+
+
+
+With that in place we can start our application with `npm run start` and open the browser. We should be seeing the dashboard on the browser but clicking on the `Personnel` link will bring up the login screen for Keycloak.
+
+
+![Figure 19](https://grandstackdemo.oss-ap-southeast-3.aliyuncs.com/Figure19.png)
+
+Enter the username and password for the user we created earlier and sign in. This will then allow us to display the Person page.
+
+This is a very simple implementation of Keycloak which actually restricts utilization at the component level. We can configure Keycloak to protect fields and so on which we will not cover in this tutorial.
+
+
+### Adding Data
+Adding data to the graph is the next part that we will cover in this tutorial. We have already created a modal pop-up for adding data in the previous updated `PersonPageComponent.js` file.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

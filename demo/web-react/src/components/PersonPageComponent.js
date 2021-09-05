@@ -19,7 +19,6 @@ import Logout from './LogoutComponent'
 const { Column, HeaderCell, Cell } = Table
 
 import { gql, useQuery } from '@apollo/client'
-// import PersonAdd from './PersonAddComponent'
 
 const GET_PERSON_NAMES = gql`
   {
@@ -32,10 +31,6 @@ const GET_PERSON_NAMES = gql`
   }
 `
 
-function testdata(data) {
-  console.log('testdata', data)
-  return <p>this istest </p>
-}
 const GetData = () => {
   const { loading, error, data } = useQuery(GET_PERSON_NAMES)
   if (loading) {
@@ -45,28 +40,30 @@ const GetData = () => {
 
   if (data) {
     console.log('Neo4j data', data)
-    // console.log('state', props.state.personData)
-    // props.setState({ personData: data })
-    // this.setState({ props.personData: data })
   }
 
   return (
     <>
-      {data.people.map((item, index) => (
-        <List.Item key={index} index={index}>
-          <p className="strong">{item.name}</p>
-          {item.reports_to.length > 0 &&
-            item.reports_to.map((rep, index) => <p key={index}>{rep.name}</p>)}
-        </List.Item>
-      ))}
-      <Table data={data.people}>
+      <Table height={400} data={data.people}>
         <Column width={200}>
           <HeaderCell>Name</HeaderCell>
           <Cell dataKey="name" />
         </Column>
         <Column width={200}>
           <HeaderCell>Reports to</HeaderCell>
-          <Cell dataKey="reports_to[0]['name']">{testdata({ data })}</Cell>
+          <Cell>
+            {(rowData, rowIndex) => {
+              return (
+                <>
+                  {rowData.reports_to.length > 0 ? (
+                    <span key={rowIndex}>{rowData.reports_to[0].name}</span>
+                  ) : (
+                    <span key={rowIndex}></span>
+                  )}
+                </>
+              )
+            }}
+          </Cell>
         </Column>
       </Table>
     </>

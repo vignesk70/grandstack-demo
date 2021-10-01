@@ -11,13 +11,14 @@ import {
   HelpBlock,
   ControlLabel,
   ButtonToolbar,
-  Dropdown,
   Table,
+  Dropdown,
+  SelectPicker,
 } from 'rsuite'
 import Keycloak from 'keycloak-js'
 import Logout from './LogoutComponent'
 const { Column, HeaderCell, Cell } = Table
-
+import 'rsuite/dist/styles/rsuite-default.css'
 import { gql, useQuery } from '@apollo/client'
 
 const GET_PERSON_NAMES = gql`
@@ -72,6 +73,50 @@ const GetData = () => {
 
 function BuildDropdown() {
   const { loading, error, data } = useQuery(GET_PERSON_NAMES)
+  const datatype = [
+    {
+      label: 'Monday',
+      value: 'Monday',
+      role: 'Master',
+    },
+    {
+      label: 'Tuesday',
+      value: 'Tuesday',
+      role: 'Master',
+    },
+    {
+      label: 'Wednesday',
+      value: 'Wednesday',
+      role: 'Master',
+    },
+    {
+      label: 'Thursday',
+      value: 'Thursday',
+      role: 'Master',
+    },
+    {
+      label: 'Friday',
+      value: 'Friday',
+      role: 'Master',
+    },
+    {
+      label: 'Saturday',
+      value: 'Saturday',
+      role: 'Master',
+    },
+    {
+      label: 'Sunday',
+      value: 'Sunday',
+      role: 'Master',
+    },
+  ]
+  console.log('builddropdown', data)
+  // data.people.map((item, index) => {
+  //   console.log(item.name, index)
+  //   datatype.push({ label: item.name, value: item.name, role: 'Master' })
+  //   console.log(datatype)
+  // })
+
   if (loading) {
     return 'error'
   }
@@ -87,6 +132,11 @@ function BuildDropdown() {
           <Dropdown.Item key={index}>{item.name}</Dropdown.Item>
         ))}
       </Dropdown>
+
+      <SelectPicker
+        placeholder="Select a person"
+        data={datatype}
+      ></SelectPicker>
     </>
   )
 }
@@ -98,6 +148,8 @@ export default class PersonPageComponent extends Component {
       show: false,
       personData: [],
       keycloak: null,
+      roles: null,
+      user: null,
       authenticated: false,
     }
     this.close = this.close.bind(this)
@@ -106,7 +158,14 @@ export default class PersonPageComponent extends Component {
   componentDidMount() {
     const keycloak = Keycloak('/keycloak.json')
     keycloak.init({ onLoad: 'login-required' }).then((authenticated) => {
-      this.setState({ keycloak: keycloak, authenticated: authenticated })
+      this.setState({
+        keycloak: keycloak,
+        authenticated: authenticated,
+        role: keycloak.hasRealmRole('pgn_admin'),
+        user: 'user1',
+      })
+      this.setState({ user: 'user2' })
+      console.log(keycloak.hasRealmRole('pgn_admin'))
     })
   }
   close() {
@@ -126,6 +185,8 @@ export default class PersonPageComponent extends Component {
             <Container>
               <FlexboxGrid>
                 <h1>Persons</h1>
+                {this.state.role}
+                {/* <p>{this.state.keycloak.realmAccess.roles}</p> */}
               </FlexboxGrid>
 
               <FlexboxGrid justify="center">
